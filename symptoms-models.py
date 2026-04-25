@@ -114,7 +114,39 @@ class TreeCrossValidation:
         print(f"Najlepsze znalezione parametry dla drzewa: max_depth: {best_params[0]}; min_elements: {best_params[1]}; with average accuracy {best_params[2]} ")
         return best_params
     
-# class NaiveBayes:
+class NaiveBayes:
+    def fit(self, X, y):
+        self.classes = np.unique(y)
+        self.classes_probabilities = {c: np.mean(y == c) for c in self.classes}
+        self.feature_probabilities = {}
+        for c in self.classes:
+            class_indices = np.where(y == c)[0]
+            class_samples = X[class_indices]
+            for feature in range(X.shape[1]):
+                feature_values = class_samples[:, feature]
+                self.feature_probabilities[(c, feature)] = np.mean(feature_values)
+    
+    def predict(self, X, y):
+        predictions = []
+        for x in X:
+            best_probability = 0
+            best_class = None
+            for c in self.classes:
+                class_prbability = self.classes_probabilities[c]
+                for feature in range(X.shape[1]):
+                    feature_value = x[feature]
+                    feature_probability = self.feature_probabilities.get((c, feature), 0.5)
+                    if feature_value == 1:
+                        class_prbability *= feature_probability
+                    else:
+                        class_prbability *= (1 - feature_probability)
+                if class_prbability > best_probability:
+                    best_probability = class_prbability
+                    best_class = c
+            predictions.append(best_class)
+        return predictions
+                
+            
     
 
 def prepare_data(df, target):
@@ -156,6 +188,11 @@ tree = DecisionTree()
 tree.fit(train_x, train_y, tree_best_params[0], tree_best_params[1])
 predictions = tree.predict(test_x)
 accuracy = np.mean(predictions == test_y)
-print(f"Accuracy: {accuracy:.4f}")
+nb = NaiveBayes()
+nb.fit(train_x, train_y)
+nb_predictions = nb.predict(test_x, test_y)
+nb_accuracy = np.mean(nb_predictions == test_y)
+print(f"Accuracy for decision tree: {accuracy:.4f}")
+print(f"Accuracy for naive bayes: {nb_accuracy:.4f}")
 
         
