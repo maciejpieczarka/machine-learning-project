@@ -126,7 +126,7 @@ class NaiveBayes:
                 feature_values = class_samples[:, feature]
                 self.feature_probabilities[(c, feature)] = np.mean(feature_values)
     
-    def predict(self, X, y):
+    def predict(self, X):
         predictions = []
         for x in X:
             best_probability = 0
@@ -190,7 +190,7 @@ predictions = tree.predict(test_x)
 accuracy = np.mean(predictions == test_y)
 nb = NaiveBayes()
 nb.fit(train_x, train_y)
-nb_predictions = nb.predict(test_x, test_y)
+nb_predictions = nb.predict(test_x)
 nb_accuracy = np.mean(nb_predictions == test_y)
 print(f"Accuracy for decision tree: {accuracy:.4f}")
 print(f"Accuracy for naive bayes: {nb_accuracy:.4f}")
