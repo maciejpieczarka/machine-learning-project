@@ -4,8 +4,11 @@ from bernoulli_naive_bayes import NaiveBayes as BernoulliNaiveBayes
 from decision_tree import DecisionTree, TreeCrossValidation
 from random_forest import RandomForest
 import pandas as pd
+import sys
+from logger import Logger
 
 def main():
+    sys.stdout = Logger("wyniki_modeli.txt")
     # Uruchomienie analizy danych
     data_analysis_main()
 

@@ -87,7 +87,7 @@ class RandomForest:
         self.trees = []
         if oversampling:
             classes, counts = np.unique(y, return_counts=True)
-            max_class_size = np.max(counts) # np. 1509 dla Healthy
+            max_class_size = np.max(counts)
             
             for i in range(n_trees):
                 print(f"Training tree {i+1}/{n_trees} with oversampling...")
