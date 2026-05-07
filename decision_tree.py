@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 
 class Node:
@@ -73,6 +72,7 @@ class DecisionTree:
         #zapamiętaj cechę i próg podziału, rekurencyjnie stwórz odgałęzienia
         return Node(feature=feature, threshold=threshold, left=self.build_tree(X[left_indices], y[left_indices], current_depth=current_depth+1), right=self.build_tree(X[right_indices], y[right_indices], current_depth=current_depth+1))
         
+    #funkcja "przechodząca" po drzewie dla pojedynczego obiektu, zwracająca wartość liścia, do którego dotarliśmy
     def traverse_tree(self, X):
         current_node = self.tree
         while current_node.value is None:
@@ -88,13 +88,15 @@ class DecisionTree:
 class TreeCrossValidation:
     def perform(self, X, y):
         parts = []
+        # podział danych na 5 części, każda część będzie raz użyta jako zbiór testowy, a pozostałe 4 części będą użyte jako zbiór treningowy
         for i in range(5):
             bottom_idx = int (len(X) * i / 5)
             top_idx = int (len(X) * (i + 1) / 5)
             parts.append((X[bottom_idx:top_idx], y[bottom_idx:top_idx]))
         params_accuracy = []
+        # szukanie najlepszych parametrów drzewa (max_depth i min_elements) poprzez sprawdzenie różnych kombinacji tych parametrów i obliczenie średniej dokładności dla każdej kombinacji na 5 iteracjach walidacji krzyżowej
         for max_depth in range(3, X.shape[1]):
-            for min_elements in range(int(X.shape[0] * 0.01), int(X.shape[0] * 0.05), 8):
+            for min_elements in range(int(X.shape[0] * 0.001), int(X.shape[0] * 0.01), int((int(X.shape[0] * 0.01) - int(X.shape[0] * 0.001)) / 5)):
                 accuracies = []
                 for i in range(len(parts)):
                     tree = DecisionTree()
@@ -113,86 +115,3 @@ class TreeCrossValidation:
         best_params = max(params_accuracy, key=lambda item: item[2])
         print(f"Najlepsze znalezione parametry dla drzewa: max_depth: {best_params[0]}; min_elements: {best_params[1]}; with average accuracy {best_params[2]} ")
         return best_params
-    
-class NaiveBayes:
-    def fit(self, X, y):
-        self.classes = np.unique(y)
-        self.classes_probabilities = {c: np.mean(y == c) for c in self.classes}
-        self.feature_probabilities = {}
-        for c in self.classes:
-            class_indices = np.where(y == c)[0]
-            class_samples = X[class_indices]
-            for feature in range(X.shape[1]):
-                feature_values = class_samples[:, feature]
-                self.feature_probabilities[(c, feature)] = np.mean(feature_values)
-    
-    def predict(self, X):
-        predictions = []
-        for x in X:
-            best_probability = 0
-            best_class = None
-            for c in self.classes:
-                class_prbability = self.classes_probabilities[c]
-                for feature in range(X.shape[1]):
-                    feature_value = x[feature]
-                    feature_probability = self.feature_probabilities.get((c, feature), 0.5)
-                    if feature_value == 1:
-                        class_prbability *= feature_probability
-                    else:
-                        class_prbability *= (1 - feature_probability)
-                if class_prbability > best_probability:
-                    best_probability = class_prbability
-                    best_class = c
-            predictions.append(best_class)
-        return predictions
-                
-            
-    
-
-def prepare_data(df, target):
-    columns_to_keep = []
-    binary_values = [0, 1, 0.0, 1.0]
-    for col in df.columns:
-        if col == target:
-            columns_to_keep.append(col)
-            continue
-        unique_values = df[col].dropna().unique()
-        non_binary_value = False
-        for value in unique_values:
-            if value not in binary_values:
-                non_binary_value = True
-                break
-        if non_binary_value == False:
-            columns_to_keep.append(col)
-    clean_df = df[columns_to_keep]
-    print(f"Zachowano {len(columns_to_keep)} kolumn: ")
-    for col in columns_to_keep:
-        print(col)
-    return clean_df
-            
-df = pd.read_csv('vitamin_deficiency_disease_dataset_20260123.csv')
-df = prepare_data(df, 'disease_diagnosis')
-print("Dropping has_multiple_deficeincies column")
-df = df.drop('has_multiple_deficiencies', axis=1)
-df = df.sample(frac=1).reset_index(drop=True)
-y = df['disease_diagnosis'].values
-x = df.drop('disease_diagnosis', axis=1).values
-split_index = int(0.7 * len(df))
-train_x = x[:split_index]
-test_x = x[split_index:]
-train_y = y[:split_index]
-test_y = y[split_index:]
-cv = TreeCrossValidation()
-tree_best_params = cv.perform(x, y)
-tree = DecisionTree()
-tree.fit(train_x, train_y, tree_best_params[0], tree_best_params[1])
-predictions = tree.predict(test_x)
-accuracy = np.mean(predictions == test_y)
-nb = NaiveBayes()
-nb.fit(train_x, train_y)
-nb_predictions = nb.predict(test_x)
-nb_accuracy = np.mean(nb_predictions == test_y)
-print(f"Accuracy for decision tree: {accuracy:.4f}")
-print(f"Accuracy for naive bayes: {nb_accuracy:.4f}")
-
-        

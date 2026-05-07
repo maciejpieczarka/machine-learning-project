@@ -129,3 +129,25 @@ class ProcessingData:
         X_test_scaled = (X_test - self.scaler_mean) / self.scaler_std
 
         return X_train_scaled, X_test_scaled
+    
+    def result_analysis(self, y_true, y_pred):
+        # Analiza wyników - obliczanie dokładności, macierzy pomyłek itp.
+        class_metrics = {}
+        for c in np.unique(y_true):
+            tp = np.sum((y_true == c) & (y_pred == c))
+            tn = np.sum((y_true != c) & (y_pred != c))
+            fp = np.sum((y_true != c) & (y_pred == c))
+            fn = np.sum((y_true == c) & (y_pred != c))
+            accuracy = (tp + tn) / len(y_true)
+            sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+            f1_score = 2 * (precision * sensitivity) / (precision + sensitivity) if (precision + sensitivity) > 0 else 0
+            class_metrics[c] = {
+                'accuracy': accuracy,
+                'sensitivity': sensitivity,
+                'precision': precision,
+                'specificity': specificity,
+                'f1_score': f1_score
+            }
+        return class_metrics
