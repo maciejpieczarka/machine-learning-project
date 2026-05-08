@@ -49,23 +49,20 @@ class ProcessingData:
             return X[train_indices], X[test_indices], y[train_indices], y[test_indices]
 
     def _stratified_split(self, X, y, test_size):
-        """
-        Stratyfikowany podział - każda klasa ma tyle samo proporcji w train i test.
-        """
         unique_classes = np.unique(y)
         X_train_list, X_test_list = [], []
         y_train_list, y_test_list = [], []
 
+        # Ustaw ziarno RAZ przed pętlą
+        if self.random_state is not None:
+            np.random.seed(self.random_state)
+
         for cls in unique_classes:
-            # Indeksy dla danej klasy
             cls_indices = np.where(y == cls)[0]
             cls_X = X[cls_indices]
             cls_y = y[cls_indices]
 
-            # Liczba próbek tej klasy w zbiorze testowym
             n_cls_test = max(1, int(len(cls_indices) * test_size))
-            # Losowy wybór
-            np.random.seed(self.random_state)
             shuffled = np.random.permutation(len(cls_indices))
 
             test_idx = shuffled[:n_cls_test]
