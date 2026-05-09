@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import bar_label
 
 
 def main():
@@ -13,7 +14,7 @@ def main():
     columns_to_drop = [
         "smoking_status", "alcohol_consumption", "exercise_level",
         "diet_type", "sun_exposure", "income_level", "latitude_region",
-        'symptoms_list','has_multiple_deficiencies'
+        'symptoms_list','has_multiple_deficiencies', 'symptoms_count'
         #  'vitamin_a_percent_rda', 'vitamin_c_percent_rda',
         # 'vitamin_d_percent_rda', 'vitamin_e_percent_rda', 'vitamin_b12_percent_rda',
         # 'folate_percent_rda', 'calcium_percent_rda', 'iron_percent_rda',
@@ -55,13 +56,15 @@ def main():
     ]
 
     #konwersja na liczby i wypisanie wartosci minimalnych i maksymalnych
-    for col in lab_columns:
+    for col in lab_columns + intake_columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
         print(f"{col}: min - {df[col].min()}, max - {df[col].max()}")
     df[symptom_columns] = df[symptom_columns].astype(int)
+    #zliczenie symptomow
+    df['symptoms_count'] = df[symptom_columns].sum(axis=1)
+    print("Amount of patients:", len(df.value_counts()))
 
     #macierz korelacji pearsona
-
     pearson_df = df.loc[:, df.columns != "disease_diagnosis"]
     pearson_corr = pearson_df.corr(method='pearson')
 
@@ -140,11 +143,13 @@ def main():
     #wykres ilości pacjentów chorujących na daną chorobę
     disease_counts = df['disease_diagnosis'].value_counts()
 
-    disease_counts.plot(
+    ax = disease_counts.plot(
         kind='bar',
         colormap='flare',
-        edgecolor='black'
+        edgecolor='black',
     )
+
+    ax.bar_label(ax.containers[0], padding=3, fontsize=9)
 
     plt.title("Number of Patients by Diagnosis", fontsize=16, pad=20)
     plt.ylabel("Number of Patients", fontsize=12)
@@ -154,7 +159,7 @@ def main():
     plt.show()
 
 
-    #wykres dla ilości pacjentów z chorobami według ilości objawów
+    #wykres dla rozkladu ilosci symptomow wedlug diagnozy
     plt.figure(figsize=(12, 6))
     sns.histplot(
         data=df,
@@ -164,12 +169,14 @@ def main():
         discrete=True,
         shrink=0.8,
         palette='Set2',
-        edgecolor='black'
+        edgecolor='black',
+        stat='percent',
+        common_norm=False
     )
 
     plt.title("Symptom Distribution", fontsize=16, pad=20)
     plt.xlabel("Total number of symptoms per patient", fontsize=12)
-    plt.ylabel("Number of patients", fontsize=12)
+    plt.ylabel("Percentage of Patients (%)", fontsize=12)
     plt.xticks(range(0, int(df['symptoms_count'].max()) + 1))
     sns.move_legend(plt.gca(), "upper left", bbox_to_anchor=(0.8, 1), title='Diagnosis')
 
