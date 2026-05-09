@@ -20,7 +20,7 @@ lab_features = [
     'iron_percent_rda'
     ]
 
-X = process.select_features(data,lab_features)
+X = process.select_features(data,lab_features).values
 y = data['disease_diagnosis'].values
 
 # Usuwnaie outlierow
@@ -28,7 +28,7 @@ X, y = process.remove_outliers_iqr(X, y)
 
 # Podzial na zbiory testowy i treningowy
 X_train, X_test, y_train, y_test = process.train_test_split(
-    X, y, test_size=0.4, stratify=True  # stratify=True zachowuje proporcje chorób
+    X, y, test_size=0.2, stratify=True  # stratify=True zachowuje proporcje chorób
 )
 
 print(f"Train: {X_train.shape[0]} próbek, {X_train.shape[1]} cech")

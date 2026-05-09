@@ -15,7 +15,7 @@ class ProcessingData:
     # Metoda obslugujaca wybieranie tylko numerycznych cech do modelu
     def select_features(self, data, feature_list):
         self.selected_features = feature_list
-        return data[feature_list].values
+        return data[feature_list]
 
     def train_test_split(self, X, y, test_size=0.2, stratify=False):
         """
