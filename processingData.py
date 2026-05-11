@@ -1,4 +1,7 @@
 import numpy as np
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 # Klasa do przetwarzania danych przed trenowaniem modelu
 class ProcessingData:
     def __init__(self, random_state=None):
@@ -148,3 +151,33 @@ class ProcessingData:
                 'f1_score': f1_score
             }
         return class_metrics
+    
+    def plot_confusion_matrix(self, y_true, y_pred, model_name):
+        classes = np.unique(y_true)
+        cm = np.zeros((len(classes), len(classes)), dtype=int)
+        class_to_idx = {cls: i for i, cls in enumerate(classes)}
+
+        for true, pred in zip(y_true, y_pred):
+            cm[class_to_idx[true]][class_to_idx[pred]] += 1
+
+        # Wizualizacja
+        fig, ax = plt.subplots(figsize=(10, 8))
+        im = ax.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+        ax.figure.colorbar(im, ax=ax)
+
+        ax.set(xticks=np.arange(len(classes)),
+               yticks=np.arange(len(classes)),
+               xticklabels=classes, yticklabels=classes,
+               title='Macierz pomyłek (Confusion Matrix) dla modelu ' + model_name,
+               ylabel='Rzeczywista klasa',
+               xlabel='Przewidziana klasa')
+
+        # Wpisz wartości
+        for i in range(len(classes)):
+            for j in range(len(classes)):
+                ax.text(j, i, str(cm[i, j]), ha="center", va="center",
+                        color="white" if cm[i, j] > cm.max() / 2 else "black")
+
+        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+        plt.tight_layout()
+        plt.show()
